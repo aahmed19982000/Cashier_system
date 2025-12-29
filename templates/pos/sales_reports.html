@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}التقارير والمبيعات - فطاطري البركة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <header class="reports-header">
+        <div class="header-left">
+            <button class="btn-export">📥 تصدير</button>
+            <div class="date-picker">
+                <span>تحديد التاريخ</span>
+                <i class="calendar-icon">📅</i>
+            </div>
+        </div>
+        <div class="header-right">
+            <h1>التقارير والمبيعات</h1>
+            <p>نظرة عامة على أداء المطعم والمبيعات اليومية</p>
+        </div>
+    </header>
+
+    <div class="time-range-selector">
+        <button class="range-btn active">اليوم</button>
+        <button class="range-btn">هذا الأسبوع</button>
+        <button class="range-btn">هذا الشهر</button>
+        <span class="last-update">آخر تحديث: 10:45 PM</span>
+    </div>
+
+    <section class="reports-stats">
+        <div class="report-stat-card">
+            <div class="stat-header">
+                <span class="stat-icon green">S</span>
+                <span class="stat-label">إجمالي المبيعات</span>
+            </div>
+            <div class="stat-body">
+                <strong class="stat-value">12,500 ج.م</strong>
+                <small class="trend up">↑ 12% عن الأمس</small>
+            </div>
+        </div>
+        <div class="report-stat-card">
+            <div class="stat-header">
+                <span class="stat-icon orange">📋</span>
+                <span class="stat-label">عدد الطلبات</span>
+            </div>
+            <div class="stat-body">
+                <strong class="stat-value">145</strong>
+                <small class="trend up">↑ 5% عن الأمس</small>
+            </div>
+        </div>
+        <div class="report-stat-card">
+            <div class="stat-header">
+                <span class="stat-icon blue">📊</span>
+                <span class="stat-label">متوسط الفاتورة</span>
+            </div>
+            <div class="stat-body">
+                <strong class="stat-value">86 ج.م</strong>
+                <small class="trend down">↓ 2% عن الأمس</small>
+            </div>
+        </div>
+        <div class="report-stat-card">
+            <div class="stat-header">
+                <span class="stat-icon red">🚫</span>
+                <span class="stat-label">طلبات ملغاة</span>
+            </div>
+            <div class="stat-body">
+                <strong class="stat-value">2</strong>
+                <small class="trend flat">0% تغيير</small>
+            </div>
+        </div>
+    </section>
+
+    <div class="reports-main-grid">
+        <div class="chart-section">
+            <div class="section-header">
+                <h3>تحليل الإيرادات</h3>
+                <p>مقارنة الساعات اليومية</p>
+            </div>
+            <div class="chart-container">
+                <div class="fake-chart">
+                    <div class="chart-tooltip">3,200 ج.م</div>
+                </div>
+            </div>
+            <div class="chart-labels">
+                <span>10 ص</span><span>12 م</span><span>2 م</span><span>4 م</span><span>6 م</span><span>8 م</span><span>10 م</span>
+            </div>
+        </div>
+
+        <div class="best-selling-section">
+            <div class="section-header">
+                <h3>الأصناف الأكثر مبيعًا</h3>
+            </div>
+            <div class="best-seller-list">
+                <div class="best-item">
+                    <div class="item-info">
+                        <span>فطير مشكل جبن</span>
+                        <span>45%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress" style="width: 45%; background: #e67e22;"></div></div>
+                    <small>120 طلب اليوم</small>
+                </div>
+                <div class="best-item">
+                    <div class="item-info">
+                        <span>فطير مشلتت سادة</span>
+                        <span>30%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress" style="width: 30%; background: #f39c12;"></div></div>
+                    <small>85 طلب اليوم</small>
+                </div>
+                </div>
+        </div>
+    </div>
+
+    <section class="recent-orders-table">
+        <div class="section-header">
+            <a href="#" class="view-all">عرض الكل</a>
+            <h3>أحدث الطلبات</h3>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>الوقت</th>
+                    <th>الأصناف</th>
+                    <th>الكاشير</th>
+                    <th>الإجمالي</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#1024</td>
+                    <td>08:45 م</td>
+                    <td>2 فطير مشكل جبن، 1 بيبسي</td>
+                    <td>أحمد</td>
+                    <td>185 ج.م</td>
+                    <td><span class="badge success">مكتمل</span></td>
+                </tr>
+                <tr>
+                    <td>#1023</td>
+                    <td>08:32 م</td>
+                    <td>1 فطير مشلتت وسط، عسل</td>
+                    <td>سارة</td>
+                    <td>65 ج.م</td>
+                    <td><span class="badge success">مكتمل</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

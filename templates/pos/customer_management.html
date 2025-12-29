@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة العملاء - فطاطري البركة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <header class="admin-header">
+        <div class="header-title">
+            <h1>إدارة العملاء</h1>
+            <p>إدارة بيانات العملاء، سجلات الطلبات، ونقاط الولاء</p>
+        </div>
+        <button class="btn-add-customer">+ إضافة عميل جديد</button>
+    </header>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">إجمالي العملاء</span>
+                <strong class="stat-value">1,250</strong>
+                <small class="stat-trend up">↑ 5%</small>
+            </div>
+            <div class="stat-icon blue">👥</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">عملاء جدد (هذا الشهر)</span>
+                <strong class="stat-value">45</strong>
+                <small class="stat-trend up">↑ 12%</small>
+            </div>
+            <div class="stat-icon purple">👤</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">العملاء النشطين</span>
+                <strong class="stat-value">120</strong>
+                <small class="stat-trend up">↑ 2%</small>
+            </div>
+            <div class="stat-icon green">🔥</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <span class="stat-label">متوسط نقاط الولاء</span>
+                <strong class="stat-value">350</strong>
+                <small class="stat-trend up">↑ 8%</small>
+            </div>
+            <div class="stat-icon orange">🏷️</div>
+        </div>
+    </section>
+
+    <section class="filter-section">
+        <div class="search-box">
+            <input type="text" placeholder="بحث باسم العميل أو رقم الهاتف...">
+            <span class="search-icon">🔍</span>
+        </div>
+        <div class="filter-tabs">
+            <button class="tab-btn active">الكل</button>
+            <button class="tab-btn">الأكثر طلباً</button>
+            <button class="tab-btn">نقاط مرتفعة</button>
+            <button class="tab-btn">عملاء جدد</button>
+        </div>
+    </section>
+
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>رقم الهاتف</th>
+                    <th>آخر زيارة</th>
+                    <th>عدد الطلبات</th>
+                    <th>نقاط الولاء</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="user-cell">
+                        <div class="user-avatar" style="background-color: #e3f2fd; color: #2196f3;">أ</div>
+                        <div class="user-meta">
+                            <strong>أحمد محمد</strong>
+                            <span>ahmed@example.com</span>
+                        </div>
+                    </td>
+                    <td class="phone-cell">+20 123 456 7890</td>
+                    <td>منذ يومين</td>
+                    <td><span class="order-count">24 طلب</span></td>
+                    <td><span class="loyalty-points">450 ⭐</span></td>
+                    <td>
+                        <div class="action-dropdown">
+                            <button class="btn-details">عرض التفاصيل</button>
+                            <button class="btn-more">⋮</button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+        </table>
+    </div>
+
+    <footer class="table-footer">
+        <div class="pagination">
+            <button class="page-nav">›</button>
+            <button class="page-num active">1</button>
+            <button class="page-num">2</button>
+            <button class="page-num">3</button>
+            <span>...</span>
+            <button class="page-nav">‹</button>
+        </div>
+        <div class="results-info">عرض 1 إلى 5 من أصل 97 عميل</div>
+    </footer>
+</div>
+{% endblock %}

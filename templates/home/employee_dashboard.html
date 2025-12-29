@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/employee_dashboard.css' %}">
+  <title>لوحة تحكم الموظف - نظام إدارة المهام</title>
+  <meta name="title" content="لوحة تحكم الموظف - نظام إدارة المه  ام">
+  <meta name="description" content="لوحة تحكم الموظف في نظام إدارة المهام. استعرض إحصائيات أدائك والمهام المطلوبة منك مع واجهة مستخدم سهلة الاستخدام.">
+  
+{% endblock %}
+
+{% block content %}
+  <h1>👋 مرحبًا {{ request.user.get_full_name|default:request.user.username }}</h1>
+  <p>هذه لمحة سريعة عن أدائك والمهام المطلوبة اليوم</p>
+
+  <div class="stats">
+    <div class="stat-box">
+      <h2>{{ total_tasks }}</h2>
+      <p>عدد المهام  </p>
+    </div>
+    <div class="stat-box">
+      <h2>{{ completed_tasks }}</h2>
+      <p>المهام المكتملة</p>
+    </div>
+    <div class="stat-box">
+      <h2>{{ pending_tasks }}</h2>
+      <p>المهام المتبقية</p>
+    </div>
+    <div class="stat-box">
+      <h2>{{ completed_publish }}</h2>
+      <p>المهام المنشورة</p>
+    </div>
+    <div class="stat-box">
+      <h2>{{ progress_percent }}%</h2>
+      <p>نسبة الإنجاز</p>
+    </div>
+  </div>
+
+  <h2>📅 المهام المطلوبة اليوم</h2>
+  {% if todays_tasks %}
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th>عنوان المقال</th>
+          <th>[النوع]</th>
+          <th>التفاصيل</th>
+          <th>رابط المقال</th>
+          <th>موقع النشر</th>
+          <th>تاريخ النشر</th>
+          <th>الحالة</th>
+          <th>عرض المزيد</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in todays_tasks %}
+          <tr>
+            <td>{{ task.article_title }}</td>
+            <td>{{ task.article_type_W_R_A_B }}</td>
+            <td>{{ task.article_details }}</td>
+            <td>
+              <form method="post" action="{% url 'update_article_link' task.id %}">
+                {% csrf_token %}
+                <input type="url" name="article_link" value="{{ task.article_link }}" placeholder="أدخل الرابط" required>
+                <button type="submit">💾 حفظ</button>
+              </form>
+            </td>
+            <td>{{ task.publish_site }}</td>
+            <td>{{ task.publish_date|date:"Y-m-d" }}</td>
+            <td>
+              <form method="post" action="{% url 'update_task_status' task.id %}">{% csrf_token %}
+                <select name="status">
+                  <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>⏳ جاري العمل</option>
+                  <option value="upload" {% if task.status == 'upload' %}selected{% endif %}>📤 تم الرفع</option>
+                  <option value="publish" {% if task.status == 'publish' %}selected{% endif %}>📢 تم النشر</option>
+                  <option value="done" {% if task.status == 'done' %}selected{% endif %}>✅ مكتملة</option>
+                </select>
+                <button type="submit">💾 حفظ</button>
+              </form>
+            </td>
+            <td>
+              <a href="{% url 'task_details' task.id %}" target="_blank">👁️ عرض</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>🎉 لا توجد مهام مجدولة اليوم! استمتع بوقتك 🎈</p>
+  {% endif %}
+
+  <h2 style="margin-top: 40px;">⚠️ المهام المؤخرة</h2>
+  {% if overdue_tasks %}
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th>عنوان المقال</th>
+          <th>[النوع]</th>
+          <th>التفاصيل</th>
+          <th>رابط المقال</th>
+          <th>موقع النشر</th>
+          <th>تاريخ النشر</th>
+          <th>الحالة</th>
+          <th>عرض المزيد</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in overdue_tasks %}
+          <tr>
+            <td>{{ task.article_title }}</td>
+            <td>{{ task.article_type_W_R_A_B }}</td>
+            <td>{{ task.article_details }}</td>
+            <td>
+              <form method="post" action="{% url 'update_article_link' task.id %}">
+                {% csrf_token %}
+                <input type="url" name="article_link" value="{{ task.article_link }}" placeholder="أدخل الرابط" required>
+                <button type="submit">💾 حفظ</button>
+              </form>
+            </td>
+            <td>{{ task.publish_site }}</td>
+            <td>{{ task.publish_date|date:"Y-m-d" }}</td>
+            <td>
+              <form method="post" action="{% url 'update_task_status' task.id %}">{% csrf_token %}
+                <select name="status">
+                  <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>⏳ جاري العمل</option>
+                  <option value="upload" {% if task.status == 'upload' %}selected{% endif %}>📤 تم الرفع</option>
+                  <option value="publish" {% if task.status == 'publish' %}selected{% endif %}>📢 تم النشر</option>
+                  <option value="done" {% if task.status == 'done' %}selected{% endif %}>✅ مكتملة</option>
+                </select>
+                <button type="submit">💾 حفظ</button>
+              </form>
+            </td>
+            <td>
+              <a href="{% url 'task_details' task.id %}" target="_blank">👁️ عرض</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>👌 لا توجد مهام مؤخرة</p>
+  {% endif %}
+
+  <h2 style="text-align: center; margin-bottom: 20px;">📸 مقالات تحتاج الي صور تم ارسلها للمصمم</h2>
+<table class="task-table">
+  <thead>
+    <tr>
+      <th>[النوع]</th>
+      <th>عنوان الصورة المطلوبة</th>
+      <th>موقع النشر</th>
+      <th>نوع الصورة</th>
+      <th>حالة الصورة</th>
+      <th>حالة المقال</th>
+      <th>المزيد</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in image_in_progress %}
+      <tr>
+        <td>{{ task.article_type_W_R_A_B }}</td>
+        <td>{{ task.image }}</td>
+        <td>{{ task.publish_site }}</td>
+        <td>{{ task.get_image_type_display }}</td>
+        <td>{{ task.get_image_status_display }}</td>
+        <td>{{ task.get_status_display }}</td>
+        <td><a href="{% url 'task_details' task.id %}" target="_blank">👁️</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" style="text-align: center;">لا توجد صور مطلوبة من المصمم </td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<h2 style="text-align: center; margin-bottom: 20px;">📸 مقالات تحتاج الي رفع الصور</h2>
+<table class="task-table">
+  <thead>
+    <tr>
+      <th>[النوع]</th>
+      <th>عنوان الصورة المطلوبة</th>
+      <th>موقع النشر</th>
+      <th>نوع الصورة</th>
+      <th>حالة الصورة</th>
+      <th>حالة المقال</th>
+      <th>المزيد</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in image_in_send %}
+      <tr>
+        <td>{{ task.article_type_W_R_A_B }}</td>
+        <td>{{ task.image }}</td>
+        <td>{{ task.publish_site }}</td>
+        <td>{{ task.get_image_type_display }}</td>
+        
+        <td>
+          <form method="post" action="{% url 'update_image_status' task.id %}">
+            {% csrf_token %}
+            <select name="image_status" onchange="this.form.submit()">
+              <option value="in_progress" {% if task.image_status == 'in_progress' %}selected{% endif %}>⏳ جاري العمل</option>
+              <option value="send" {% if task.image_status == 'send' %}selected{% endif %}>تم الارسال للكاتب</option>
+              <option value="publish" {% if task.image_status == 'publish' %}selected{% endif %}>✅ تم الرفع على الموقع</option>
+            </select>
+          </form>
+        </td>
+        
+        <td>{{ task.get_status_display }}</td>
+        <td><a href="{% url 'task_details' task.id %}" target="_blank">👁️</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" style="text-align: center;">لا توجد صور مطلوبة من المصمم </td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

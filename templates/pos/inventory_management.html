@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة المخزون - فطاطري البركة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-container">
+    <header class="inventory-header">
+        <div class="header-actions">
+            <button class="btn-add-item">+ إضافة صنف جديد</button>
+            <button class="btn-export">
+                <span>تصدير تقرير</span>
+                <i class="icon">📥</i>
+            </button>
+        </div>
+        <div class="header-title">
+            <h1>إدارة المخزون</h1>
+            <p>تتبع كميات الدقيق، الجبن، اللحوم والمكونات الأخرى</p>
+        </div>
+    </header>
+
+    <section class="inventory-stats">
+        <div class="stat-card">
+            <div class="stat-icon blue">📦</div>
+            <div class="stat-info">
+                <span class="label">إجمالي الأصناف</span>
+                <strong class="value">124</strong>
+                <small class="trend up">+2%</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">⚠️</div>
+            <div class="stat-info">
+                <span class="label">أصناف منخفضة</span>
+                <strong class="value">8</strong>
+                <small class="badge-count">+4 أصناف</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">💰</div>
+            <div class="stat-info">
+                <span class="label">قيمة المخزون</span>
+                <strong class="value">45,000 ج.م</strong>
+                <small class="trend up">+1200 ج.م</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">🛒</div>
+            <div class="stat-info">
+                <span class="label">طلبات الشراء</span>
+                <strong class="value">3</strong>
+                <small class="trend">0</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="alert-section">
+        <div class="alert-header">
+            <a href="#" class="view-all">عرض كل التنبيهات</a>
+            <div class="alert-title">
+                <i class="bell-icon">🔔</i>
+                <h3>تنبيهات عاجلة: المخزون منخفض</h3>
+            </div>
+        </div>
+        <div class="alert-cards">
+            <div class="alert-card-item">
+                <div class="item-icon">🌾</div>
+                <div class="item-progress">
+                    <div class="item-name">دقيق فاخر</div>
+                    <div class="progress-bar"><div class="progress" style="width: 30%;"></div></div>
+                    <div class="item-meta">15 كجم متبقي <span>الحد الأدنى: 20</span></div>
+                </div>
+            </div>
+            <div class="alert-card-item">
+                <div class="item-icon">🧀</div>
+                <div class="item-progress">
+                    <div class="item-name">جبن رومي قديم</div>
+                    <div class="progress-bar"><div class="progress" style="width: 15%;"></div></div>
+                    <div class="item-meta">2 كجم متبقي <span>الحد الأدنى: 5</span></div>
+                </div>
+            </div>
+            <div class="alert-card-item">
+                <div class="item-icon">💧</div>
+                <div class="item-progress">
+                    <div class="item-name">سمن بلدي</div>
+                    <div class="progress-bar"><div class="progress" style="width: 40%;"></div></div>
+                    <div class="item-meta">8 كجم متبقي <span>الحد الأدنى: 10</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="inventory-table-section">
+        <div class="table-filters">
+            <div class="filter-groups">
+                <button class="filter-tab active">الكل</button>
+                <button class="filter-tab">خامات أساسية</button>
+                <button class="filter-tab">أجبان</button>
+                <button class="filter-tab">لحوم</button>
+                <button class="filter-tab">مشروبات</button>
+            </div>
+            <div class="search-box">
+                <input type="text" placeholder="بحث باسم الصنف أو الكود...">
+                <i class="search-icon">🔍</i>
+            </div>
+        </div>
+
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>الصنف</th>
+                    <th>الفئة</th>
+                    <th>الكمية الحالية</th>
+                    <th>حد الطلب</th>
+                    <th>آخر تحديث</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>دقيق فاخر (شيكارة)</strong></td>
+                    <td>خامات أساسية</td>
+                    <td><strong>15 كجم</strong></td>
+                    <td>20 كجم</td>
+                    <td>منذ ساعتين</td>
+                    <td><span class="status-badge low">منخفض</span></td>
+                    <td><button class="btn-update">تحديث</button></td>
+                </tr>
+                <tr>
+                    <td><strong>بيض أحمر</strong></td>
+                    <td>خامات أساسية</td>
+                    <td><strong>120 بيضة</strong></td>
+                    <td>60 بيضة</td>
+                    <td>أمس</td>
+                    <td><span class="status-badge ok">متوفر</span></td>
+                    <td><button class="btn-update">تحديث</button></td>
+                </tr>
+                </tbody>
+        </table>
+
+        <div class="table-footer">
+            <div class="pagination">
+                <button class="page-btn">‹</button>
+                <button class="page-btn">›</button>
+            </div>
+            <div class="table-info">عرض 5-1 من أصل 124 صنف</div>
+        </div>
+    </section>
+</div>
+{% endblock %}

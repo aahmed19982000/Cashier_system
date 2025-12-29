@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة الموظفين - فطاطري البركة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <header class="admin-header">
+        <div class="header-title">
+            <nav class="breadcrumb">الرئيسية / إدارة الموظفين</nav>
+            <h1>إدارة الموظفين</h1>
+            <p>عرض وإدارة بيانات جميع الموظفين في المطعم</p>
+        </div>
+        <button class="btn-add-employee">+ إضافة موظف جديد</button>
+    </header>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon-bg gray"><i class="icon">👥</i></div>
+            <div class="stat-details">
+                <span class="stat-label">إجمالي الموظفين</span>
+                <strong class="stat-value">24</strong>
+                <small class="trend-up">↑ 2+ هذا الشهر</small>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-bg green"><i class="icon">✔️</i></div>
+            <div class="stat-details">
+                <span class="stat-label">الموظفين النشطين</span>
+                <strong class="stat-value">18</strong>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon-bg orange"><i class="icon">⛱️</i></div>
+            <div class="stat-details">
+                <span class="stat-label">في إجازة</span>
+                <strong class="stat-value">2</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="filter-toolbar">
+        <div class="search-wrapper">
+            <input type="text" placeholder="بحث بالاسم، الدور، أو الرقم التعريفي...">
+            <i class="search-icon">🔍</i>
+        </div>
+        <div class="filter-dropdowns">
+            <select class="filter-select">
+                <option>كل الأدوار</option>
+                <option>مدير فرع</option>
+                <option>كاشير</option>
+                <option>شيف فطير</option>
+            </select>
+            <select class="filter-select">
+                <option>الحالة: الكل</option>
+                <option>نشط</option>
+                <option>في إجازة</option>
+            </select>
+            <button class="btn-filter-icon">⚙️</button>
+        </div>
+    </section>
+
+    <div class="table-container">
+        <table class="employee-table">
+            <thead>
+                <tr>
+                    <th>الموظف</th>
+                    <th>الدور الوظيفي</th>
+                    <th>معلومات الاتصال</th>
+                    <th>تاريخ التعيين</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="user-info-cell">
+                        <img src="{% static 'images/emp1.jpg' %}" alt="علي حسن" class="avatar">
+                        <div class="name-id">
+                            <strong>علي حسن</strong>
+                            <span>EMP-001#</span>
+                        </div>
+                    </td>
+                    <td><span class="role-badge manager">مدير فرع</span></td>
+                    <td class="contact-cell">
+                        <div>📞 0100 123 4567</div>
+                        <div class="email">ali.hassan@example.com</div>
+                    </td>
+                    <td>15 يناير 2023</td>
+                    <td><span class="status-dot active">نشط</span></td>
+                    <td><button class="btn-edit-dots">⋮</button></td>
+                </tr>
+
+                <tr>
+                    <td class="user-info-cell">
+                        <img src="{% static 'images/emp2.jpg' %}" alt="محمود سعيد" class="avatar">
+                        <div class="name-id">
+                            <strong>محمود سعيد</strong>
+                            <span>EMP-012#</span>
+                        </div>
+                    </td>
+                    <td><span class="role-badge chef">شيف فطير</span></td>
+                    <td class="contact-cell">
+                        <div>📞 0111 555 4444</div>
+                    </td>
+                    <td>10 فبراير 2022</td>
+                    <td><span class="status-dot on-leave">في إجازة</span></td>
+                    <td><button class="btn-edit-dots">⋮</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="pagination-footer">
+        <div class="pagination-controls">
+            <button class="page-btn">التالي</button>
+            <button class="page-num active">1</button>
+            <button class="page-num">2</button>
+            <button class="page-num">3</button>
+            <button class="page-btn disabled">السابق</button>
+        </div>
+        <div class="table-info">عرض 1 إلى 4 من أصل 24 موظف</div>
+    </footer>
+</div>
+{% endblock %}
