@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Users, Notification
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
@@ -89,9 +88,9 @@ def logout_view(request):
 # ✅ عرض الموظفين
 @role_required('manager')
 def employee_list(request):
-    employees = User.objects.all()
-    return render(request, 'accounts/employees.html', {'employees': employees})
-
+    employees = User.objects.all()  # أو Users.objects.all() لو انت معرف الموديل كده
+    print(employees)  # للتأكد في Console
+    return render(request, 'pos/employees_management.html', {'employees': employees})
 # ✅ حذف الموظف
 @role_required('manager')
 def delete_employee(request, user_id):

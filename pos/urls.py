@@ -9,6 +9,7 @@ urlpatterns = [
     path('sales-reports/', views.sales_reports, name='sales_reports'),
     path('customer-management/', views.customer_management, name='customer_management'),
     path('employees-management/', views.employees_management, name='employees_management'),
+    path('menu/<int:product_id>/', views.menu_management, name='menu_management')
 
 
 

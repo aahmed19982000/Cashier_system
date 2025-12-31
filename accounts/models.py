@@ -7,12 +7,14 @@ from django.conf import settings
 
 class Users(AbstractUser):
     ROLE_CHOICES = (
-        ('manager', 'Manager'),
-        ('employee', 'Employee'),
+        ('manager', 'مدير'),
+        ('employee', 'موظف'),
         ('designer', 'Designer'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='employee')
     job_title = models.CharField(max_length=100, blank=True, null=True)
+    mobile = models.CharField(max_length=15)
+
     def __str__(self):
         return self.get_full_name() or self.username
 

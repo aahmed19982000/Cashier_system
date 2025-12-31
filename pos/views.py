@@ -1,5 +1,8 @@
 from django.shortcuts import render
-
+from .models import Product
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import ProductForm
+from django.contrib import messages
 # Create your views here.
 
 def pos_page(request):
@@ -7,8 +10,42 @@ def pos_page(request):
 
 
 
-def menu_management(request):
-    return render(request, 'pos/menu_management.html')
+def menu_management(request, product_id=None):
+    """
+    إدارة المنيو: إضافة، تعديل، حذف
+    """
+    if product_id:
+        product = get_object_or_404(Product, id=product_id)
+    else:
+        product = None
+
+    # عملية الإضافة أو التعديل
+    if request.method == 'POST':
+        if 'delete' in request.POST and product:
+            product.delete()
+            messages.success(request, 'تم حذف المنتج بنجاح!')
+            return redirect('menu_management')
+
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            if product:
+                messages.success(request, 'تم تعديل المنتج بنجاح!')
+            else:
+                messages.success(request, 'تم إضافة المنتج بنجاح!')
+            return redirect('menu_management')
+        else:
+            messages.error(request, 'هناك خطأ في البيانات، يرجى التحقق.')
+    else:
+        form = ProductForm(instance=product)
+
+    products = Product.objects.all()
+    return render(request, 'pos/menu_management.html', {
+        'form': form,
+        'products': products,
+        'editing_product': product
+    })
+
 
 
 

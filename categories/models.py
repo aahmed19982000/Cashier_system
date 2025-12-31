@@ -61,3 +61,10 @@ class contract_duration(models.Model):
 
     def __str__(self):
         return self.duration
+    
+
+class Category_products(models.Model):
+    category = models.CharField (max_length=100, verbose_name="قسم المنيو")
+
+    def __str__(self):
+        return self.category
