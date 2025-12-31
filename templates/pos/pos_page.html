@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}نقطة البيع الاحترافية - فطاطري البركة{% endblock %}
+{% block title %}نقطة البيع - فطاطري البركة{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/pos.css' %}">
@@ -13,37 +13,37 @@
         <header class="pos-top-bar">
             <div class="search-container">
                 <i class="search-icon">🔍</i>
-                <input type="text" placeholder="ابحث عن صنف، كود، أو مسح باركود...">
+                <input type="text" id="posSearch" placeholder="ابحث عن صنف...">
             </div>
             <div class="user-actions">
-                <button class="action-circle" title="التنبيهات">🔔<span class="dot"></span></button>
+                <button class="action-circle" title="التنبيهات">🔔</button>
                 <button class="action-circle" title="الإعدادات">⚙️</button>
             </div>
         </header>
 
         <nav class="categories-container">
             <div class="cat-track">
-                <button class="cat-pill active">⭐ الكل</button>
-                <button class="cat-pill">🍕 فطير حادق</button>
-                <button class="cat-pill">🥐 فطير حلو</button>
-                <button class="cat-pill">☕ مشروبات</button>
-                <button class="cat-pill">🥗 سلطات</button>
+                <button class="cat-pill active" data-filter="all">⭐ الكل</button>
+                {% for category in categories %}
+                    <button class="cat-pill" data-filter="{{ category.id }}">{{ category.name }}</button>
+                {% endfor %}
             </div>
         </nav>
 
-        <div class="products-layout">
-            {% for i in "123456" %} <div class="product-item">
-                <div class="product-img-box">
-                    <img src="{% static 'images/pizza-sample.jpg' %}" alt="منتج">
-                    <span class="item-price-badge">85 ج.م</span>
+        <div class="products-layout" id="productsGrid">
+            {% for product in products %}
+            <div class="product-item" data-category="{{ product.Category.id }}">
+                <div class="product-main-info">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <div class="product-price-tag">{{ product.price }} <span>ج.م</span></div>
                 </div>
-                <div class="product-details">
-                    <h3 class="product-title">فطير مشكل جبن</h3>
-                    <p class="product-desc">رومي، شيدر، موزاريلا، كيري</p>
-                    <div class="product-footer">
-                        <button class="add-btn">إضافة للطلب +</button>
-                    </div>
-                </div>
+                <p class="product-desc">{{ product.description|default:"-" }}</p>
+                <button class="add-to-cart-btn" 
+                        data-id="{{ product.id }}" 
+                        data-name="{{ product.name }}" 
+                        data-price="{{ product.price }}">
+                    إضافة +
+                </button>
             </div>
             {% endfor %}
         </div>
@@ -52,40 +52,21 @@
     <aside class="cart-sidebar">
         <div class="cart-header">
             <div class="cart-meta">
-                <h2>طلب طاولة <span class="table-num">04</span></h2>
-                <span class="order-id">#ORD-2025-102</span>
+                <h2>الطلب الحالي</h2>
+                <span class="order-id">#ORD-{% now "Ymd-Hi" %}</span>
             </div>
-            <button class="clear-cart" title="إفراغ السلة">🗑️</button>
+            <button class="clear-cart" id="clearCart">🗑️</button>
         </div>
 
-        <div class="cart-items-container">
-            <div class="cart-card">
-                <div class="cart-card-info">
-                    <h4>فطير مشكل جبن</h4>
-                    <small>إضافات: زيتون زيادة</small>
-                    <div class="price-calc">85 × 2 = <strong>170 ج.م</strong></div>
-                </div>
-                <div class="cart-card-actions">
-                    <div class="stepper">
-                        <button class="step-minus">−</button>
-                        <input type="number" value="2" readonly>
-                        <button class="step-plus">+</button>
-                    </div>
-                </div>
-            </div>
+        <div class="cart-items-container" id="cartItemsContainer">
+            <div class="empty-cart-msg">السلة فارغة</div>
         </div>
 
         <div class="cart-summary-footer">
-            <div class="quick-options">
-                <button class="opt-btn">👤 عميل</button>
-                <button class="opt-btn">🏷️ خصم</button>
-                <button class="opt-btn">📝 ملاحظة</button>
-            </div>
-
             <div class="billing-details">
-                <div class="bill-row"><span>المجموع الفرعي</span> <span>265.00 ج.م</span></div>
-                <div class="bill-row"><span>الضريبة (14%)</span> <span>37.10 ج.م</span></div>
-                <div class="bill-row grand-total"><span>الإجمالي النهائي</span> <span>302.10 ج.م</span></div>
+                <div class="bill-row"><span>المجموع الفرعي</span> <span id="subtotalDisplay">0.00 ج.م</span></div>
+                <div class="bill-row"><span>الضريبة (0%)</span> <span id="taxDisplay">0.00 ج.م</span></div>
+                <div class="bill-row grand-total"><span>الإجمالي النهائي</span> <span id="totalDisplay">0.00 ج.م</span></div>
             </div>
 
             <div class="checkout-grid">
@@ -95,4 +76,91 @@
         </div>
     </aside>
 </div>
+
+<script>
+    let cart = [];
+
+    // نظام إضافة العناصر للسلة
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('add-to-cart-btn')) {
+            const btn = e.target;
+            const product = {
+                id: btn.dataset.id,
+                name: btn.dataset.name,
+                price: parseFloat(btn.dataset.price),
+                qty: 1
+            };
+            const existing = cart.find(item => item.id === product.id);
+            if (existing) existing.qty++;
+            else cart.push(product);
+            renderCart();
+        }
+    });
+
+    // رسم وتحديث السلة
+    function renderCart() {
+        const container = document.getElementById('cartItemsContainer');
+        container.innerHTML = '';
+        let subtotal = 0;
+
+        if (cart.length === 0) {
+            container.innerHTML = '<div class="empty-cart-msg">السلة فارغة</div>';
+        }
+
+        cart.forEach(item => {
+            subtotal += (item.price * item.qty);
+            container.innerHTML += `
+                <div class="cart-card">
+                    <div class="cart-card-info">
+                        <h4>${item.name}</h4>
+                        <div class="price-calc">${item.price} × ${item.qty} = <strong>${(item.price * item.qty).toFixed(2)} ج.م</strong></div>
+                    </div>
+                    <div class="cart-card-actions">
+                        <div class="stepper">
+                            <button onclick="updateQty('${item.id}', -1)">−</button>
+                            <input type="number" value="${item.qty}" readonly>
+                            <button onclick="updateQty('${item.id}', 1)">+</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        const tax = subtotal * 0;
+        const total = subtotal + tax;
+        document.getElementById('subtotalDisplay').innerText = subtotal.toFixed(2) + ' ج.م';
+        document.getElementById('taxDisplay').innerText = tax.toFixed(2) + ' ج.م';
+        document.getElementById('totalDisplay').innerText = total.toFixed(2) + ' ج.م';
+    }
+
+    window.updateQty = function(id, change) {
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            item.qty += change;
+            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+    }
+
+    document.getElementById('clearCart').onclick = () => { if(confirm('تأكيد مسح السلة؟')) { cart = []; renderCart(); } };
+
+    // نظام البحث والفلترة
+    document.getElementById('posSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = item.querySelector('.product-title').innerText.toLowerCase();
+            item.style.display = name.includes(term) ? 'flex' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.cat-pill').forEach(pill => {
+        pill.onclick = function() {
+            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.style.display = (filter === 'all' || item.dataset.category === filter) ? 'flex' : 'none';
+            });
+        };
+    });
+</script>
 {% endblock %}

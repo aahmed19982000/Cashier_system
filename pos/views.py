@@ -3,10 +3,21 @@ from .models import Product
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ProductForm
 from django.contrib import messages
+from categories.models import Category_products
 # Create your views here.
 
+
 def pos_page(request):
-    return render(request, 'pos/pos_page.html')
+    # جلب جميع المنتجات المتاحة
+    products = Product.objects.filter(available=True)
+    # جلب جميع التصنيفات لعرضها في الفلاتر
+    categories = Category_products.objects.all()
+
+    context = {
+        'products': products,
+        'categories': categories,
+    }
+    return render(request, 'pos/pos_page.html', context)
 
 
 
