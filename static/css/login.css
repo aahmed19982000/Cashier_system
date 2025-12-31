@@ -1,4 +1,14 @@
-/* الإعدادات العامة */
+/* إعدادات عامة */
+:root {
+    --primary-color: #e67e22; /* لون الفطائر الذهبي */
+    --secondary-color: #d35400;
+    --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    --card-bg: #ffffff;
+    --text-main: #2d3436;
+    --text-muted: #636e72;
+    --shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
 * {
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -7,99 +17,86 @@
 body.login-page {
     margin: 0;
     padding: 0;
-    height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-    /* خلفية الصورة مع تأثير التغبيش كما في الصورة */
-    background: url('../images/login-bg.jpg') no-repeat center center fixed;
-    background-size: cover;
-    position: relative;
-}
-
-/* طبقة تغبيش فوق الخلفية الكلية */
-body.login-page::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(8px);
-    z-index: 1;
+    align-items: center;
+    min-height: 100vh;
+    background: var(--bg-gradient);
 }
 
 .login-wrapper {
-    position: relative;
-    z-index: 2;
     width: 100%;
-    max-width: 420px;
+    max-width: 450px;
     padding: 20px;
 }
 
-/* تصميم البطاقة العائمة */
+/* الكارت الرئيسي */
 .login-card {
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.8s ease-in-out;
 }
 
+/* استبدال الصورة بتصميم هندسي احترافي */
 .card-header-img {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    padding: 40px 20px;
+    text-align: center;
     position: relative;
-    height: 140px;
 }
 
+/* إخفاء الصورة الأصلية لأننا نريد تصميم بدون صور */
 .card-header-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.header-overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: none; 
 }
 
 .header-overlay h2 {
-    color: #fff;
+    color: white;
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    font-size: 1.8rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* جسم الكارت */
 .card-body {
     padding: 30px;
-    text-align: center;
 }
 
 .card-body h3 {
-    margin: 0;
-    color: #2d3436;
+    color: var(--text-main);
+    margin-bottom: 10px;
     font-size: 1.4rem;
+    text-align: center;
 }
 
 .subtitle {
-    color: #636e72;
+    color: var(--text-muted);
     font-size: 0.9rem;
-    margin-top: 8px;
-    margin-bottom: 25px;
+    text-align: center;
+    margin-bottom: 30px;
 }
 
-/* تصميم حقول الإدخال */
+/* الرسائل والتنبيهات */
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+.alert.error { background: #ffeef0; color: #d63031; border: 1px solid #fab1a0; }
+
+/* المدخلات */
 .input-group {
-    text-align: right;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
 }
 
 .input-group label {
     display: block;
-    font-size: 0.85rem;
-    color: #2d3436;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    color: var(--text-main);
     font-weight: 600;
 }
 
@@ -109,35 +106,32 @@ body.login-page::before {
     align-items: center;
 }
 
+.input-icon {
+    position: absolute;
+    right: 15px;
+    color: var(--text-muted);
+}
+
 .input-wrapper input {
     width: 100%;
-    padding: 12px 40px 12px 15px;
-    border: 1px solid #dfe6e9;
-    border-radius: 10px;
-    background: #f9f9f9;
-    font-size: 0.95rem;
-    transition: 0.3s;
+    padding: 12px 45px 12px 15px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    outline: none;
+    transition: all 0.3s;
+    font-size: 1rem;
 }
 
 .input-wrapper input:focus {
-    outline: none;
-    border-color: #e67e22;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.1);
-}
-
-.input-icon {
-    position: absolute;
-    right: 12px;
-    color: #b2bec3;
-    font-size: 1.1rem;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(230, 126, 34, 0.1);
 }
 
 .toggle-password {
     position: absolute;
-    left: 12px;
+    left: 15px;
     cursor: pointer;
-    color: #b2bec3;
+    color: var(--text-muted);
 }
 
 /* خيارات النموذج */
@@ -146,7 +140,7 @@ body.login-page::before {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
 .remember-me {
@@ -154,44 +148,53 @@ body.login-page::before {
     align-items: center;
     gap: 5px;
     cursor: pointer;
-    color: #636e72;
 }
 
 .forgot-link {
-    color: #e67e22;
+    color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
 }
 
-/* زر تسجيل الدخول (نفس اللون البرتقالي في الصورة) */
+/* زر الدخول */
 .btn-login {
     width: 100%;
     padding: 14px;
-    background: #e67e22; /* اللون البرتقالي المميز في صورتك */
-    color: white;
+    background: linear-gradient(to left, var(--primary-color), var(--secondary-color));
     border: none;
-    border-radius: 10px;
-    font-size: 1rem;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     gap: 10px;
-    transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
 }
 
 .btn-login:hover {
-    background: #d35400;
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
 }
 
+.btn-login .login-icon {
+    transform: rotate(180deg); /* ليتناسب مع الاتجاه العربي */
+}
+
+/* التذييل */
 .card-footer {
-    padding: 15px;
-    background: #f8f9fa;
+    padding: 20px;
     text-align: center;
-    font-size: 0.75rem;
-    color: #bdc3c7;
-    border-top: 1px solid #f1f1f1;
+    background: #fcfcfc;
+    border-top: 1px solid #eee;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* حركات أنيميشن */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }

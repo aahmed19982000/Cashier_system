@@ -73,9 +73,9 @@ def t_login(request):
             elif user.role == 'manager':
                  return redirect('dashboard')
             elif user.role == 'designer':
-                 return redirect('designer_dashboard')
+                 return redirect('dashboard')
             else:
-                return redirect('employee_dashboard')
+                return redirect('dashboard')
         else:
             messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة.')
 
