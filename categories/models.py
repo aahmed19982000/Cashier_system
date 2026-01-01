@@ -68,3 +68,10 @@ class Category_products(models.Model):
 
     def __str__(self):
         return self.category
+    
+ 
+class Status_order(models.Model):
+    status = models.CharField (max_length=100, verbose_name="حالة الطلب")
+
+    def __str__(self):
+        return self.status

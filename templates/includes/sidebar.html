@@ -49,6 +49,14 @@
                         <span class="text">إدارة العملاء</span>
                     </a>
                 </li>
+
+                <li>
+                    <a href="{% url 'orders' %}" class="{% if request.resolver_match.url_name == 'sales_reports' %}active{% endif %}">
+                        <span class="icon"></span>
+                        <span class="text">كل المبيعات </span>
+                    </a>
+                </li>
+                <li>
             </ul>
         </div>
 

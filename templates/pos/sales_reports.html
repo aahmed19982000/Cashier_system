@@ -5,150 +5,168 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/reports.css' %}">
+<style>
+    .staff-select-box {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-family: inherit;
+        outline: none;
+        background-color: white;
+    }
+    .active-staff-indicator {
+        background: #e67e22;
+        color: white;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-right: 10px;
+    }
+    /* تنسيق خاص لتمييز الحالات المرتجعة في الجدول */
+    .status-text {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: #f1f5f9;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="reports-container">
     <header class="reports-header">
-        <div class="header-left">
-            <button class="btn-export">📥 تصدير</button>
-            <div class="date-picker">
-                <span>تحديد التاريخ</span>
-                <i class="calendar-icon">📅</i>
-            </div>
-        </div>
         <div class="header-right">
-            <h1>التقارير والمبيعات</h1>
-            <p>نظرة عامة على أداء المطعم والمبيعات اليومية</p>
+            <h1>
+                {% if is_manager %}📊 تقارير الإدارة العامة{% else %}👨‍🍳 ملخص أدائي الشخصي{% endif %}
+                {% if selected_staff_name %}<span class="active-staff-indicator">الموظف: {{ selected_staff_name }}</span>{% endif %}
+            </h1>
+            <p>تحليل المبيعات للفترة المختارة (تحديث: {{ now|date:"h:i A" }})</p>
+        </div>
+        <div class="header-left">
+            <button class="btn-print" onclick="window.print()">📥 طباعة التقرير</button>
         </div>
     </header>
 
-    <div class="time-range-selector">
-        <button class="range-btn active">اليوم</button>
-        <button class="range-btn">هذا الأسبوع</button>
-        <button class="range-btn">هذا الشهر</button>
-        <span class="last-update">آخر تحديث: 10:45 PM</span>
-    </div>
+    <section class="reports-control-bar">
+        <div class="time-range-selector">
+            <a href="?range=today&staff_id={{ selected_staff }}&status_id={{ selected_status }}" class="range-btn {% if filter_type == 'today' %}active{% endif %}">اليوم</a>
+            <a href="?range=week&staff_id={{ selected_staff }}&status_id={{ selected_status }}" class="range-btn {% if filter_type == 'week' %}active{% endif %}">آخر 7 أيام</a>
+            <a href="?range=month&staff_id={{ selected_staff }}&status_id={{ selected_status }}" class="range-btn {% if filter_type == 'month' %}active{% endif %}">هذا الشهر</a>
+        </div>
+
+        <form class="custom-date-form" method="GET">
+            <input type="hidden" name="range" value="custom">
+            
+            {% if is_manager %}
+            <div class="date-input-group">
+                <label>الموظف:</label>
+                <select name="staff_id" class="staff-select-box">
+                    <option value="all">كل الموظفين</option>
+                    {% for staff in staff_members %}
+                    <option value="{{ staff.id }}" {% if selected_staff == staff.id|stringformat:"i" %}selected{% endif %}>
+                        {{ staff.get_full_name|default:staff.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="date-input-group">
+                <label>الحالة:</label>
+                <select name="status_id" class="staff-select-box">
+                    <option value="all">كل الحالات</option>
+                    {% for status in all_statuses %}
+                    <option value="{{ status.id }}" {% if selected_status == status.id|stringformat:"i" %}selected{% endif %}>
+                        {{ status.status }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="date-input-group">
+                <label>من:</label>
+                <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+            </div>
+            <div class="date-input-group">
+                <label>إلى:</label>
+                <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+            </div>
+            <button type="submit" class="btn-filter-apply">تطبيق</button>
+        </form>
+    </section>
 
     <section class="reports-stats">
-        <div class="report-stat-card">
-            <div class="stat-header">
-                <span class="stat-icon green">S</span>
+        <div class="stat-card">
+            <div class="stat-icon-box green">💰</div>
+            <div class="stat-content">
                 <span class="stat-label">إجمالي المبيعات</span>
-            </div>
-            <div class="stat-body">
-                <strong class="stat-value">12,500 ج.م</strong>
-                <small class="trend up">↑ 12% عن الأمس</small>
+                <h2 class="stat-value">{{ stats.total_sales|floatformat:2 }} <small>ج.م</small></h2>
             </div>
         </div>
-        <div class="report-stat-card">
-            <div class="stat-header">
-                <span class="stat-icon orange">📋</span>
+        <div class="stat-card">
+            <div class="stat-icon-box orange">📋</div>
+            <div class="stat-content">
                 <span class="stat-label">عدد الطلبات</span>
-            </div>
-            <div class="stat-body">
-                <strong class="stat-value">145</strong>
-                <small class="trend up">↑ 5% عن الأمس</small>
+                <h2 class="stat-value">{{ stats.orders_count }}</h2>
             </div>
         </div>
-        <div class="report-stat-card">
-            <div class="stat-header">
-                <span class="stat-icon blue">📊</span>
-                <span class="stat-label">متوسط الفاتورة</span>
-            </div>
-            <div class="stat-body">
-                <strong class="stat-value">86 ج.م</strong>
-                <small class="trend down">↓ 2% عن الأمس</small>
-            </div>
-        </div>
-        <div class="report-stat-card">
-            <div class="stat-header">
-                <span class="stat-icon red">🚫</span>
-                <span class="stat-label">طلبات ملغاة</span>
-            </div>
-            <div class="stat-body">
-                <strong class="stat-value">2</strong>
-                <small class="trend flat">0% تغيير</small>
+        <div class="stat-card">
+            <div class="stat-icon-box blue">📊</div>
+            <div class="stat-content">
+                <span class="stat-label">متوسط الطلب</span>
+                <h2 class="stat-value">{{ stats.avg_order|floatformat:2 }} <small>ج.م</small></h2>
             </div>
         </div>
     </section>
 
     <div class="reports-main-grid">
-        <div class="chart-section">
-            <div class="section-header">
-                <h3>تحليل الإيرادات</h3>
-                <p>مقارنة الساعات اليومية</p>
-            </div>
-            <div class="chart-container">
-                <div class="fake-chart">
-                    <div class="chart-tooltip">3,200 ج.م</div>
+        <div class="best-selling-section">
+            <div class="section-header"><h3>🔥 الأصناف الأكثر طلباً</h3></div>
+            <div class="best-seller-list">
+                {% for item in best_sellers %}
+                <div class="best-item">
+                    <div class="item-meta">
+                        <span>{{ item.product__name }}</span>
+                        <span>{{ item.total_qty }} طلب</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-fill" style="width: {% if stats.orders_count > 0 %}{% widthratio item.total_qty stats.orders_count 100 %}{% else %}0{% endif %}%"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="chart-labels">
-                <span>10 ص</span><span>12 م</span><span>2 م</span><span>4 م</span><span>6 م</span><span>8 م</span><span>10 م</span>
+                {% empty %}
+                <p>لا توجد بيانات لهذه الفترة</p>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="best-selling-section">
-            <div class="section-header">
-                <h3>الأصناف الأكثر مبيعًا</h3>
+        <div class="recent-orders-section">
+            <div class="section-header"><h3>📑 سجل العمليات المفلتر</h3></div>
+            <div class="table-wrapper">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>رقم الطلب</th>
+                            <th>التوقيت</th>
+                            <th>الحالة</th> {% if is_manager %}<th>الكاشير</th>{% endif %}
+                            <th>الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.created_at|date:"d/m | h:i A" }}</td>
+                            <td><span class="status-text">{{ order.status.status }}</span></td>
+                            {% if is_manager %}<td>{{ order.user.get_full_name|default:order.user.username }}</td>{% endif %}
+                            <td><strong>{{ order.total_price }} ج.م</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">لا توجد طلبات تطابق هذا الفلتر.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="best-seller-list">
-                <div class="best-item">
-                    <div class="item-info">
-                        <span>فطير مشكل جبن</span>
-                        <span>45%</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress" style="width: 45%; background: #e67e22;"></div></div>
-                    <small>120 طلب اليوم</small>
-                </div>
-                <div class="best-item">
-                    <div class="item-info">
-                        <span>فطير مشلتت سادة</span>
-                        <span>30%</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress" style="width: 30%; background: #f39c12;"></div></div>
-                    <small>85 طلب اليوم</small>
-                </div>
-                </div>
         </div>
     </div>
-
-    <section class="recent-orders-table">
-        <div class="section-header">
-            <a href="#" class="view-all">عرض الكل</a>
-            <h3>أحدث الطلبات</h3>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>رقم الطلب</th>
-                    <th>الوقت</th>
-                    <th>الأصناف</th>
-                    <th>الكاشير</th>
-                    <th>الإجمالي</th>
-                    <th>الحالة</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>#1024</td>
-                    <td>08:45 م</td>
-                    <td>2 فطير مشكل جبن، 1 بيبسي</td>
-                    <td>أحمد</td>
-                    <td>185 ج.م</td>
-                    <td><span class="badge success">مكتمل</span></td>
-                </tr>
-                <tr>
-                    <td>#1023</td>
-                    <td>08:32 م</td>
-                    <td>1 فطير مشلتت وسط، عسل</td>
-                    <td>سارة</td>
-                    <td>65 ج.م</td>
-                    <td><span class="badge success">مكتمل</span></td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
 </div>
 {% endblock %}

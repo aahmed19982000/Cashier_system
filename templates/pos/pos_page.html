@@ -5,6 +5,50 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/pos.css' %}">
+<style>
+    /* حل مشكلة اختفاء زر الدفع وتثبيت الفوتر */
+    .cart-sidebar {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 20px);
+        position: sticky;
+        top: 10px;
+    }
+
+    #cartItemsContainer {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+        min-height: 200px;
+    }
+
+    /* تنسيق زر المرتجع الجديد */
+    .btn-return-action {
+        background-color: #f39c12;
+        color: white !important;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        margin-left: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: 0.3s;
+    }
+    .btn-return-action:hover {
+        background-color: #e67e22;
+        transform: translateY(-2px);
+    }
+
+    /* تمييز رقم الطلب عند التحديث */
+    .order-id.updated {
+        color: #27ae60;
+        font-weight: bold;
+        transition: 0.5s;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,6 +60,7 @@
                 <input type="text" id="posSearch" placeholder="ابحث عن صنف...">
             </div>
             <div class="user-actions">
+                <a href="{% url 'orders' %}" class="btn-return-action">🔄 إضافة مرتجع</a>
                 <button class="action-circle" title="التنبيهات">🔔</button>
                 <button class="action-circle" title="الإعدادات">⚙️</button>
             </div>
@@ -53,7 +98,7 @@
         <div class="cart-header">
             <div class="cart-meta">
                 <h2>الطلب الحالي</h2>
-                <span class="order-id">#ORD-{% now "Ymd-Hi" %}</span>
+                <span class="order-id" id="displayOrderId">#ORD-جديد</span>
             </div>
             <button class="clear-cart" id="clearCart">🗑️</button>
         </div>
@@ -71,96 +116,141 @@
 
             <div class="checkout-grid">
                 <button class="check-btn visa">💳 فيزا</button>
-                <button class="check-btn cash">💵 دفع نقداً</button>
+                <button class="check-btn cash" id="cashCheckout">💵 دفع نقداً</button>
             </div>
         </div>
     </aside>
 </div>
 
 <script>
-    let cart = [];
+let cart = [];
 
-    // نظام إضافة العناصر للسلة
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add-to-cart-btn')) {
-            const btn = e.target;
-            const product = {
-                id: btn.dataset.id,
-                name: btn.dataset.name,
-                price: parseFloat(btn.dataset.price),
-                qty: 1
-            };
-            const existing = cart.find(item => item.id === product.id);
-            if (existing) existing.qty++;
-            else cart.push(product);
-            renderCart();
-        }
-    });
-
-    // رسم وتحديث السلة
-    function renderCart() {
-        const container = document.getElementById('cartItemsContainer');
-        container.innerHTML = '';
-        let subtotal = 0;
-
-        if (cart.length === 0) {
-            container.innerHTML = '<div class="empty-cart-msg">السلة فارغة</div>';
-        }
-
-        cart.forEach(item => {
-            subtotal += (item.price * item.qty);
-            container.innerHTML += `
-                <div class="cart-card">
-                    <div class="cart-card-info">
-                        <h4>${item.name}</h4>
-                        <div class="price-calc">${item.price} × ${item.qty} = <strong>${(item.price * item.qty).toFixed(2)} ج.م</strong></div>
-                    </div>
-                    <div class="cart-card-actions">
-                        <div class="stepper">
-                            <button onclick="updateQty('${item.id}', -1)">−</button>
-                            <input type="number" value="${item.qty}" readonly>
-                            <button onclick="updateQty('${item.id}', 1)">+</button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        const tax = subtotal * 0;
-        const total = subtotal + tax;
-        document.getElementById('subtotalDisplay').innerText = subtotal.toFixed(2) + ' ج.م';
-        document.getElementById('taxDisplay').innerText = tax.toFixed(2) + ' ج.م';
-        document.getElementById('totalDisplay').innerText = total.toFixed(2) + ' ج.م';
-    }
-
-    window.updateQty = function(id, change) {
-        const item = cart.find(i => i.id === id);
-        if (item) {
-            item.qty += change;
-            if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
-            renderCart();
-        }
-    }
-
-    document.getElementById('clearCart').onclick = () => { if(confirm('تأكيد مسح السلة؟')) { cart = []; renderCart(); } };
-
-    // نظام البحث والفلترة
-    document.getElementById('posSearch').addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.product-item').forEach(item => {
-            const name = item.querySelector('.product-title').innerText.toLowerCase();
-            item.style.display = name.includes(term) ? 'flex' : 'none';
-        });
-    });
-
-    document.querySelectorAll('.cat-pill').forEach(pill => {
-        pill.onclick = function() {
-            document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
-            const filter = this.dataset.filter;
-            document.querySelectorAll('.product-item').forEach(item => {
-                item.style.display = (filter === 'all' || item.dataset.category === filter) ? 'flex' : 'none';
-            });
+// إضافة العناصر للسلة
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('add-to-cart-btn')) {
+        const btn = e.target;
+        const product = {
+            id: btn.dataset.id,
+            name: btn.dataset.name,
+            price: parseFloat(btn.dataset.price),
+            qty: 1
         };
+        const existing = cart.find(item => item.id === product.id);
+        if (existing) existing.qty++;
+        else cart.push(product);
+        renderCart();
+    }
+});
+
+// رسم وتحديث السلة
+function renderCart() {
+    const container = document.getElementById('cartItemsContainer');
+    container.innerHTML = '';
+    let subtotal = 0;
+
+    if (cart.length === 0) {
+        container.innerHTML = '<div class="empty-cart-msg">السلة فارغة</div>';
+    }
+
+    cart.forEach(item => {
+        subtotal += (item.price * item.qty);
+        container.innerHTML += `
+            <div class="cart-card">
+                <div class="cart-card-info">
+                    <h4>${item.name}</h4>
+                    <div class="price-calc">${item.price} × ${item.qty} = <strong>${(item.price * item.qty).toFixed(2)} ج.م</strong></div>
+                </div>
+                <div class="cart-card-actions">
+                    <div class="stepper">
+                        <button onclick="updateQty('${item.id}', -1)">−</button>
+                        <input type="number" value="${item.qty}" readonly>
+                        <button onclick="updateQty('${item.id}', 1)">+</button>
+                    </div>
+                </div>
+            </div>`;
     });
+
+    const tax = subtotal * 0;
+    const total = subtotal + tax;
+    document.getElementById('subtotalDisplay').innerText = subtotal.toFixed(2) + ' ج.م';
+    document.getElementById('taxDisplay').innerText = tax.toFixed(2) + ' ج.م';
+    document.getElementById('totalDisplay').innerText = total.toFixed(2) + ' ج.م';
+    
+    container.scrollTop = container.scrollHeight;
+}
+
+window.updateQty = function(id, change) {
+    const item = cart.find(i => i.id === id);
+    if (item) {
+        item.qty += change;
+        if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+        renderCart();
+    }
+}
+
+document.getElementById('clearCart').onclick = () => { if(confirm('تأكيد مسح السلة؟')) { cart = []; renderCart(); } };
+
+// البحث والفلترة
+document.getElementById('posSearch').addEventListener('input', function(e) {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.product-item').forEach(item => {
+        const name = item.querySelector('.product-title').innerText.toLowerCase();
+        item.style.display = name.includes(term) ? 'flex' : 'none';
+    });
+});
+
+document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.onclick = function() {
+        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.product-item').forEach(item => {
+            item.style.display = (filter === 'all' || item.dataset.category === filter) ? 'flex' : 'none';
+        });
+    };
+});
+
+// الدفع النقدي المحدث لإظهار رقم الطلب الحقيقي
+document.getElementById('cashCheckout').addEventListener('click', function() {
+    if (cart.length === 0) {
+        alert('السلة فارغة!');
+        return;
+    }
+
+    const total = parseFloat(document.getElementById('totalDisplay').innerText);
+    const orderDisplay = document.getElementById('displayOrderId');
+
+    fetch("{% url 'cash_checkout' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ cart: cart, total: total })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success'){
+            // تحديث الواجهة برقم الطلب الحقيقي القادم من قاعدة البيانات
+            orderDisplay.innerText = "#ORD-" + data.order_id;
+            orderDisplay.classList.add('updated');
+
+            alert('تم تسجيل الطلب! رقم الطلب الحقيقي: ' + data.order_id);
+            
+            cart = [];
+            renderCart();
+
+            // العودة للحالة العادية بعد فترة قصيرة لبدء طلب جديد
+            setTimeout(() => {
+                orderDisplay.classList.remove('updated');
+                orderDisplay.innerText = "#ORD-جديد";
+            }, 5000);
+
+        } else {
+            alert('حصل خطأ أثناء تسجيل الطلب');
+        }
+    })
+    .catch(err => alert('حصل خطأ في الاتصال'));
+});
 </script>
 {% endblock %}
