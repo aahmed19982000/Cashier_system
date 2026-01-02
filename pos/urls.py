@@ -14,13 +14,9 @@ urlpatterns = [
     path('orders/', views.orders, name='orders'),
     path('<int:order_id>/', views.order_detail, name='order_detail'),
     path('<int:order_id>/action/', views.process_order_action, name='process_order_action'),
-
-
-
-
-
-
+    path('inventory/add/', views.add_inventory_item, name='add_inventory_item'),
     
-
+    # الرابط الجديد المفقود لتحديث الكميات (إضافة/خصم)
+    path('inventory/update/', views.update_inventory_quantity, name='update_inventory'),
 
 ]

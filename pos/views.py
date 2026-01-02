@@ -3,10 +3,10 @@ from .models import Product
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ProductForm
 from django.contrib import messages
-from categories.models import Category_products
+from categories.models import Category_products , Unit_choices
 from django.contrib.auth import get_user_model
 from accounts.decorators import role_required
-
+from django.views.decorators.http import require_POST
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -15,6 +15,7 @@ from .models import Order, OrderItem , Status_order , InventoryItem, IngredientC
 from django.db.models import Sum, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 
 
 # Create your views here.
@@ -113,6 +114,9 @@ def inventory_management(request):
     # جلب جميع الأصناف
     items = InventoryItem.objects.all().order_by('name')
     categories = IngredientCategory.objects.all()
+    
+    # جلب الوحدات لتكون متوافقة مع حقل ForeignKey في الموديل
+    units = Unit_choices.objects.all()
 
     # 1. إحصائية إجمالي الأصناف
     total_items_count = items.count()
@@ -122,7 +126,6 @@ def inventory_management(request):
     low_stock_count = len(low_stock_items)
 
     # 3. إحصائية قيمة المخزون الإجمالية
-    # نقوم بضرب الكمية في السعر لكل صنف ثم الجمع
     inventory_value = sum(item.total_value for item in items)
 
     # فلترة حسب الفئة إذا تم اختيارها
@@ -133,6 +136,7 @@ def inventory_management(request):
     context = {
         'items': items,
         'categories': categories,
+        'units': units,  # أضفنا الوحدات هنا ليتم عرضها في modal الإضافة
         'total_items_count': total_items_count,
         'low_stock_count': low_stock_count,
         'low_stock_items': low_stock_items[:3],  
@@ -141,9 +145,70 @@ def inventory_management(request):
     }
     return render(request, 'pos/inventory_management.html', context)
 
+@require_POST
+@role_required('manager')
+def add_inventory_item(request):
+    try:
+        # استلام البيانات
+        name = request.POST.get('name')
+        category_id = request.POST.get('category')
+        unit_id = request.POST.get('unit') # استلام الـ ID الخاص بالوحدة
+        quantity = request.POST.get('quantity')
+        min_limit = request.POST.get('min_limit')
+        unit_cost = request.POST.get('unit_cost')
 
+        # جلب الكائنات المرتبطة
+        category = get_object_or_404(IngredientCategory, id=category_id)
+        unit_obj = get_object_or_404(Unit_choices, id=unit_id)
+        
+        # إنشاء الصنف
+        InventoryItem.objects.create(
+            name=name,
+            category=category,
+            unit=unit_obj, # حفظ الكائن المربوط
+            quantity=quantity,
+            min_limit=min_limit,
+            unit_cost=unit_cost
+        )
 
+        return JsonResponse({'status': 'success', 'message': 'تم إضافة الصنف بنجاح'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
+@require_POST
+def update_inventory_quantity(request):
+    item_id = request.POST.get('item_id')
+    amount_raw = request.POST.get('amount', '0').strip()
+    action = request.POST.get('action')
+
+    try:
+        # تنظيف النص من أي رموز غير رقمية قد تأتي من المتصفح
+        amount_clean = "".join(filter(lambda x: x in "0123456789.", amount_raw))
+        
+        # محاولة التحويل
+        amount = Decimal(amount_clean)
+        
+        if amount <= 0:
+            return JsonResponse({'status': 'error', 'message': 'يجب إدخال رقم أكبر من الصفر'}, status=400)
+
+        item = get_object_or_404(InventoryItem, id=item_id)
+
+        if action == 'add':
+            item.quantity += amount
+            item.save()
+            return JsonResponse({'status': 'success', 'message': f'تم إضافة {amount} بنجاح'})
+        
+        elif action == 'subtract':
+            if item.quantity < amount:
+                return JsonResponse({'status': 'error', 'message': 'المخزون الحالي لا يكفي'}, status=400)
+            item.quantity -= amount
+            item.save()
+            return JsonResponse({'status': 'success', 'message': f'تم خصم {amount} بنجاح'})
+
+    except (InvalidOperation, ValueError):
+        return JsonResponse({'status': 'error', 'message': f'القيمة ({amount_raw}) ليست رقماً صالحاً'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': 'خطأ غير متوقع في النظام'}, status=500)
 
 User = get_user_model()
 

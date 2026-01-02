@@ -6,13 +6,20 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+    .dashboard-wrapper { direction: rtl; font-family: 'Cairo', sans-serif; }
+    .stat-info strong, .item-name-row span, .total strong { color: #2c3e50 !important; }
+    .trend-up { color: #2ecc71 !important; font-weight: bold; }
+    .trend-down { color: #e74c3c !important; font-weight: bold; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; background: #f0f2f5; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper">
     <header class="main-header">
         <div class="header-right">
-            <button class="btn-add-order">+ طلب جديد</button>
+            <a href="#" class="btn-add-order" style="text-decoration: none;">+ طلب جديد</a>
             <div class="notification-icon">
                 <span class="dot"></span>
                 <i class="bell-icon">🔔</i>
@@ -20,7 +27,7 @@
         </div>
         <div class="header-left">
             <h2>ملخص الوردية</h2>
-            <p>الأربعاء، 15 نوفمبر 2023</p>
+            <p>{{ today_date|date:"l، d F Y" }}</p>
         </div>
     </header>
 
@@ -29,15 +36,17 @@
             <div class="stat-icon blue-bg">S</div>
             <div class="stat-info">
                 <span>المبيعات اليومية</span>
-                <strong>2,450 ج.م</strong>
-                <small class="trend-up">↑ 12% عن الأمس</small>
+                <strong>{{ total_sales|default:"0" }} ج.م</strong>
+                <small class="{% if growth_rate >= 0 %}trend-up{% else %}trend-down{% endif %}">
+                    {% if growth_rate >= 0 %}↑{% else %}↓{% endif %} {{ abs_growth_rate }}% عن الأمس
+                </small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon orange-bg">📋</div>
             <div class="stat-info">
                 <span>الطلبات الكلية</span>
-                <strong>48 طلب</strong>
+                <strong>{{ total_orders_count }} طلب</strong>
                 <small>منذ بداية الوردية</small>
             </div>
         </div>
@@ -45,7 +54,7 @@
             <div class="stat-icon yellow-bg">🏠</div>
             <div class="stat-info">
                 <span>قيد التحضير</span>
-                <strong>5 طلبات</strong>
+                <strong>{{ preparing_orders_count }} طلبات</strong>
                 <small class="warning-text">تحتاج انتباه</small>
             </div>
         </div>
@@ -53,7 +62,7 @@
             <div class="stat-icon purple-bg">📊</div>
             <div class="stat-info">
                 <span>متوسط الطلب</span>
-                <strong>125 ج.م</strong>
+                <strong>{{ average_order_value|floatformat:0 }} ج.م</strong>
                 <small>قيمة الفاتورة</small>
             </div>
         </div>
@@ -63,56 +72,31 @@
         <aside class="best-sellers-section">
             <div class="section-header">
                 <h3>الأصناف الأكثر مبيعاً</h3>
+                {% if is_manager %}
                 <a href="#">تقارير مفصلة</a>
+                {% endif %}
             </div>
             
+            {% for item in best_sellers %}
             <div class="seller-item">
-                <div class="item-icon pizza">🍕</div>
+                <div class="item-icon pizza">🍴</div>
                 <div class="item-details">
                     <div class="item-name-row">
-                        <span>فطير مشكل جبن</span>
-                        <span class="count">145 طلب</span>
+                        <span>{{ item.product__name }}</span>
+                        <span class="count">{{ item.total_qty }} طلب</span>
                     </div>
-                    <div class="progress-bar"><div class="progress" style="width: 70%; background: #e67e22;"></div></div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 70%; background: #3498db;"></div>
+                    </div>
                 </div>
             </div>
-
-            <div class="seller-item">
-                <div class="item-icon sweet">🥐</div>
-                <div class="item-details">
-                    <div class="item-name-row">
-                        <span>فطير بالسكر واللبن</span>
-                        <span class="count">112 طلب</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress" style="width: 55%; background: #f1c40f;"></div></div>
-                </div>
-            </div>
-
-            <div class="seller-item">
-                <div class="item-icon meat">🍖</div>
-                <div class="item-details">
-                    <div class="item-name-row">
-                        <span>فطير سجق بلدي</span>
-                        <span class="count">98 طلب</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress" style="width: 45%; background: #e74c3c;"></div></div>
-                </div>
-            </div>
-
-            <div class="seller-item">
-                <div class="item-icon drink">🥤</div>
-                <div class="item-details">
-                    <div class="item-name-row">
-                        <span>مشروبات غازية</span>
-                        <span class="count">230 طلب</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress" style="width: 90%; background: #3498db;"></div></div>
-                </div>
-            </div>
+            {% empty %}
+            <p style="text-align: center; color: #95a5a6; padding-top: 20px;">لا توجد مبيعات مسجلة اليوم.</p>
+            {% endfor %}
 
             <div class="daily-goal">
                 <div class="goal-info">
-                    <span>هدف المبيعات اليومي</span>
+                    <span>تحقيق الهدف اليومي</span>
                     <strong>82%</strong>
                 </div>
                 <div class="progress-bar-large"><div class="progress" style="width: 82%;"></div></div>
@@ -122,76 +106,43 @@
         <main class="active-orders-section">
             <div class="section-header">
                 <a href="#" class="view-all">عرض الكل</a>
-                <h3>الطلبات النشطة</h3>
+                <h3>الطلبات النشطة ({{ active_orders.count }})</h3>
             </div>
 
             <div class="orders-grid">
+                {% for order in active_orders %}
                 <div class="order-card">
                     <div class="order-header">
-                        <span class="table-tag">طاولة 4</span>
-                        <span class="order-id">#1054 🕒</span>
+                        <span class="table-tag">طلب #{{ order.id }}</span>
+                        <span class="order-id">{{ order.created_at|date:"H:i" }}</span>
                     </div>
-                    <div class="order-status preparing">جاري التحضير (12 د)</div>
+                    
+                    <div class="order-status">
+                         <span class="status-badge">{{ order.status }}</span>
+                    </div>
+
                     <div class="order-items">
-                        <div class="item"><span>1x فطير مشكل جبن (وسط)</span> <span>145 ج.م</span></div>
-                        <div class="item"><span>2x بيبسي علب</span> <span>40 ج.م</span></div>
+                        {% for item in order.items.all %}
+                        <div class="item">
+                            <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                            <span>{{ item.price }} ج.م</span>
+                        </div>
+                        {% endfor %}
                     </div>
+                    
                     <div class="order-footer">
-                        <div class="total"><span>الإجمالي</span> <strong>185 ج.م</strong></div>
+                        <div class="total"><span>الإجمالي</span> <strong>{{ order.total_price }} ج.م</strong></div>
                         <div class="actions">
                             <button class="btn-edit">تعديل</button>
-                            <button class="btn-ready">جاهز للتقديم</button>
+                            <button class="btn-ready">إتمام</button>
                         </div>
                     </div>
                 </div>
-
-                <div class="order-card">
-                    <div class="order-header">
-                        <span class="takeaway-tag">سفري</span>
-                        <span class="order-id">#1055 💬</span>
-                    </div>
-                    <div class="order-status waiting">في الانتظار (2 د)</div>
-                    <div class="order-items">
-                        <div class="item"><span>1x فطير بالسكر (كبير)</span> <span>85 ج.م</span></div>
-                        <div class="item"><span>1x فطير سجق بلدي</span> <span>120 ج.م</span></div>
-                    </div>
-                    <div class="order-footer">
-                        <div class="total"><span>الإجمالي</span> <strong>205 ج.م</strong></div>
-                        <div class="actions">
-                            <button class="btn-print">طباعة</button>
-                            <button class="btn-start">بدء التحضير</button>
-                        </div>
-                    </div>
+                {% empty %}
+                <div style="text-align: center; width: 100%; padding: 50px; color: #95a5a6;">
+                    <p>لا توجد طلبات نشطة حالياً</p>
                 </div>
-
-                <div class="order-card">
-                    <div class="order-header">
-                        <span class="table-tag black">طاولة 2</span>
-                        <span class="order-id">#1052</span>
-                    </div>
-                    <div class="order-status ready">✓ جاهز للتقديم</div>
-                    <div class="order-items">
-                        <div class="item"><span>2x بيتزا فطير شرقي</span> <span>210 ج.م</span></div>
-                    </div>
-                    <div class="order-footer">
-                        <div class="total"><span>الإجمالي</span> <strong>210 ج.م</strong></div>
-                        <button class="btn-pay">إتمام الدفع وإغلاق</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="new-order-bar">
-                <div class="order-info">
-                    <span class="icon">📦</span>
-                    <div>
-                        <strong>طلب جديد #1056</strong>
-                        <small>منذ 30 ثانية • تطبيق الموبايل</small>
-                    </div>
-                </div>
-                <div class="order-price">
-                    <span>65 ج.م</span>
-                    <button class="btn-accept">قبول</button>
-                </div>
+                {% endfor %}
             </div>
         </main>
     </div>
