@@ -5,6 +5,18 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/inventory.css' %}">
+<style>
+    /* تحسين بسيط لجعل الروابط تعمل بشكل صحيح في الفلترة */
+    .filter-tab {
+        text-decoration: none;
+        color: inherit;
+        display: inline-block;
+    }
+    .filter-tab.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -28,88 +40,81 @@
             <div class="stat-icon blue">📦</div>
             <div class="stat-info">
                 <span class="label">إجمالي الأصناف</span>
-                <strong class="value">124</strong>
-                <small class="trend up">+2%</small>
+                <strong class="value">{{ total_items_count }}</strong>
+                <small class="trend up">+{{ categories.count }} فئات</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon red">⚠️</div>
             <div class="stat-info">
                 <span class="label">أصناف منخفضة</span>
-                <strong class="value">8</strong>
-                <small class="badge-count">+4 أصناف</small>
+                <strong class="value">{{ low_stock_count }}</strong>
+                <small class="badge-count">تحتاج طلب شراء</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon green">💰</div>
             <div class="stat-info">
                 <span class="label">قيمة المخزون</span>
-                <strong class="value">45,000 ج.م</strong>
-                <small class="trend up">+1200 ج.م</small>
+                <strong class="value">{{ inventory_value|floatformat:0 }} ج.م</strong>
+                <small class="trend up">إجمالي التكلفة</small>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon orange">🛒</div>
             <div class="stat-info">
                 <span class="label">طلبات الشراء</span>
-                <strong class="value">3</strong>
-                <small class="trend">0</small>
+                <strong class="value">{{ low_stock_count }}</strong>
+                <small class="trend">تنبيه نشط</small>
             </div>
         </div>
     </section>
 
     <section class="alert-section">
         <div class="alert-header">
-            <a href="#" class="view-all">عرض كل التنبيهات</a>
+            <a href="?filter=low" class="view-all">عرض كل التنبيهات</a>
             <div class="alert-title">
                 <i class="bell-icon">🔔</i>
                 <h3>تنبيهات عاجلة: المخزون منخفض</h3>
             </div>
         </div>
         <div class="alert-cards">
+            {% for alert_item in low_stock_items %}
             <div class="alert-card-item">
-                <div class="item-icon">🌾</div>
+                <div class="item-icon">
+                    {% if "دقيق" in alert_item.name %}🌾{% elif "جبن" in alert_item.name %}🧀{% else %}📦{% endif %}
+                </div>
                 <div class="item-progress">
-                    <div class="item-name">دقيق فاخر</div>
-                    <div class="progress-bar"><div class="progress" style="width: 30%;"></div></div>
-                    <div class="item-meta">15 كجم متبقي <span>الحد الأدنى: 20</span></div>
+                    <div class="item-name">{{ alert_item.name }}</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {% widthratio alert_item.quantity alert_item.min_limit 100 %}%; background-color: #e74c3c;"></div>
+                    </div>
+                    <div class="item-meta">{{ alert_item.quantity }} {{ alert_item.get_unit_display }} متبقي <span>الحد الأدنى: {{ alert_item.min_limit }}</span></div>
                 </div>
             </div>
-            <div class="alert-card-item">
-                <div class="item-icon">🧀</div>
-                <div class="item-progress">
-                    <div class="item-name">جبن رومي قديم</div>
-                    <div class="progress-bar"><div class="progress" style="width: 15%;"></div></div>
-                    <div class="item-meta">2 كجم متبقي <span>الحد الأدنى: 5</span></div>
-                </div>
-            </div>
-            <div class="alert-card-item">
-                <div class="item-icon">💧</div>
-                <div class="item-progress">
-                    <div class="item-name">سمن بلدي</div>
-                    <div class="progress-bar"><div class="progress" style="width: 40%;"></div></div>
-                    <div class="item-meta">8 كجم متبقي <span>الحد الأدنى: 10</span></div>
-                </div>
-            </div>
+            {% empty %}
+            <p style="padding: 20px; color: var(--text-gray);">✅ جميع الأصناف متوفرة بمستويات آمنة.</p>
+            {% endfor %}
         </div>
     </section>
 
     <section class="inventory-table-section">
         <div class="table-filters">
             <div class="filter-groups">
-                <button class="filter-tab active">الكل</button>
-                <button class="filter-tab">خامات أساسية</button>
-                <button class="filter-tab">أجبان</button>
-                <button class="filter-tab">لحوم</button>
-                <button class="filter-tab">مشروبات</button>
+                <a href="?" class="filter-tab {% if not selected_category %}active{% endif %}">الكل</a>
+                {% for cat in categories %}
+                <a href="?category={{ cat.id }}" class="filter-tab {% if selected_category == cat.id|stringformat:'i' %}active{% endif %}">
+                    {{ cat.name }}
+                </a>
+                {% endfor %}
             </div>
             <div class="search-box">
-                <input type="text" placeholder="بحث باسم الصنف أو الكود...">
+                <input type="text" id="inventorySearch" placeholder="بحث باسم الصنف أو الكود...">
                 <i class="search-icon">🔍</i>
             </div>
         </div>
 
-        <table class="inventory-table">
+        <table class="inventory-table" id="inventoryTable">
             <thead>
                 <tr>
                     <th>الصنف</th>
@@ -122,25 +127,28 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><strong>دقيق فاخر (شيكارة)</strong></td>
-                    <td>خامات أساسية</td>
-                    <td><strong>15 كجم</strong></td>
-                    <td>20 كجم</td>
-                    <td>منذ ساعتين</td>
-                    <td><span class="status-badge low">منخفض</span></td>
+                {% for item in items %}
+                <tr class="inventory-row">
+                    <td><strong>{{ item.name }}</strong></td>
+                    <td>{{ item.category.name }}</td>
+                    <td><strong>{{ item.quantity }} {{ item.get_unit_display }}</strong></td>
+                    <td>{{ item.min_limit }} {{ item.get_unit_display }}</td>
+                    <td>{{ item.updated_at|timesince }}</td>
+                    <td>
+                        {% if item.is_low %}
+                        <span class="status-badge low">منخفض</span>
+                        {% else %}
+                        <span class="status-badge ok">متوفر</span>
+                        {% endif %}
+                    </td>
                     <td><button class="btn-update">تحديث</button></td>
                 </tr>
+                {% empty %}
                 <tr>
-                    <td><strong>بيض أحمر</strong></td>
-                    <td>خامات أساسية</td>
-                    <td><strong>120 بيضة</strong></td>
-                    <td>60 بيضة</td>
-                    <td>أمس</td>
-                    <td><span class="status-badge ok">متوفر</span></td>
-                    <td><button class="btn-update">تحديث</button></td>
+                    <td colspan="7" style="text-align: center; padding: 30px;">لا توجد أصناف مسجلة في هذا القسم.</td>
                 </tr>
-                </tbody>
+                {% endfor %}
+            </tbody>
         </table>
 
         <div class="table-footer">
@@ -148,8 +156,27 @@
                 <button class="page-btn">‹</button>
                 <button class="page-btn">›</button>
             </div>
-            <div class="table-info">عرض 5-1 من أصل 124 صنف</div>
+            <div class="table-info">إجمالي المعروض: {{ items.count }} صنف</div>
         </div>
     </section>
 </div>
+
+<script>
+    // نظام البحث اللحظي في الجدول
+    document.getElementById('inventorySearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('.inventory-row');
+        
+        rows.forEach(row => {
+            const itemName = row.cells[0].innerText.toLowerCase();
+            const itemCategory = row.cells[1].innerText.toLowerCase();
+            
+            if (itemName.includes(searchTerm) || itemCategory.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
 {% endblock %}

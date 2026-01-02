@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Order, OrderItem
+from .models import Product, Order, OrderItem ,InventoryItem
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'available')  # الأعمدة اللي تظهر في القائمة
@@ -15,3 +15,11 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = ('user__username',)                                      # البحث حسب اسم المستخدم
 
 admin.site.register(Order, OrderAdmin)
+
+
+class InventoryItemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'min_limit', 'unit')  # الأعمدة اللي تظهر في القائمة
+    list_filter = ('name', 'category')                                 # فلتر حسب المستخدم وطريقة الدفع
+    search_fields = ('name',)                                      # البحث حسب اسم المستخدم
+
+admin.site.register(InventoryItem, InventoryItemAdmin)

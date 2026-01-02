@@ -1,5 +1,5 @@
 from django.db import models
-from categories.models import Category_products ,Status_order
+from categories.models import Category_products ,Status_order , Unit_choices ,IngredientCategory
 from django.conf import settings
 
 class Product(models.Model):
@@ -53,3 +53,35 @@ class OrderItem(models.Model):
 
     def total_price(self):
         return self.price * self.quantity
+    
+
+
+class customer (models.Model):
+    name= models.CharField(max_length=400, verbose_name="اسم العميل")
+    mobil=models.CharField(max_length=15)
+    address =models.CharField(max_length=1000, verbose_name="عنوان العميل")
+
+    def __str__(self):
+        return self.name
+    
+
+
+class InventoryItem(models.Model):
+    name = models.CharField(max_length=200, verbose_name="اسم الصنف")
+    category = models.ForeignKey(IngredientCategory, on_delete=models.CASCADE, related_name='items', verbose_name="الفئة")
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="الكمية الحالية")
+    min_limit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="حد الطلب (الحد الأدنى)")
+    unit =  models.ForeignKey(Unit_choices, on_delete=models.CASCADE, verbose_name="الوحدة")
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="سعر الوحدة")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="آخر تحديث")
+
+    @property
+    def total_value(self):
+        return self.quantity * self.unit_cost
+
+    @property
+    def is_low(self):
+        return self.quantity <= self.min_limit
+
+    def __str__(self):
+        return self.name

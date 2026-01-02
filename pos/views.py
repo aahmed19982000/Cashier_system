@@ -11,7 +11,7 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .models import Order, OrderItem , Status_order
+from .models import Order, OrderItem , Status_order , InventoryItem, IngredientCategory
 from django.db.models import Sum, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -110,7 +110,36 @@ def menu_management(request, product_id=None):
 
 
 def inventory_management(request):
-    return render(request, 'pos/inventory_management.html')
+    # جلب جميع الأصناف
+    items = InventoryItem.objects.all().order_by('name')
+    categories = IngredientCategory.objects.all()
+
+    # 1. إحصائية إجمالي الأصناف
+    total_items_count = items.count()
+
+    # 2. إحصائية الأصناف المنخفضة
+    low_stock_items = [item for item in items if item.is_low]
+    low_stock_count = len(low_stock_items)
+
+    # 3. إحصائية قيمة المخزون الإجمالية
+    # نقوم بضرب الكمية في السعر لكل صنف ثم الجمع
+    inventory_value = sum(item.total_value for item in items)
+
+    # فلترة حسب الفئة إذا تم اختيارها
+    category_filter = request.GET.get('category')
+    if category_filter and category_filter != 'all':
+        items = items.filter(category_id=category_filter)
+
+    context = {
+        'items': items,
+        'categories': categories,
+        'total_items_count': total_items_count,
+        'low_stock_count': low_stock_count,
+        'low_stock_items': low_stock_items[:3],  
+        'inventory_value': inventory_value,
+        'selected_category': category_filter,
+    }
+    return render(request, 'pos/inventory_management.html', context)
 
 
 

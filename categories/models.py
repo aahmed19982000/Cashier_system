@@ -75,3 +75,15 @@ class Status_order(models.Model):
 
     def __str__(self):
         return self.status
+    
+
+class IngredientCategory(models.Model):
+    category = models.CharField (max_length=100, verbose_name="اصناف المخزن ")
+    def __str__(self):
+        return self.category
+    
+
+class Unit_choices(models.Model):
+    unit = models.CharField (max_length=100, verbose_name="وحدات التخزين")
+    def __str__(self):
+        return self.unit

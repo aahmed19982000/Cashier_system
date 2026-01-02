@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Site, Article_type_U_N ,Article_type_W_R_A_B, Official_holiday, CustomHoliday, contract_details, contract_duration ,Category_products , Status_order
+from .models import Site, Article_type_U_N ,Article_type_W_R_A_B, Official_holiday, CustomHoliday, contract_details, contract_duration ,Category_products , Status_order , Unit_choices,IngredientCategory
 @admin.register(Site)
 class SiteAdmin(admin.ModelAdmin):
     list_display = ['name','number_of_days','start_date','site_link']
@@ -37,3 +37,13 @@ class Category(admin.ModelAdmin):
 @admin.register(Status_order)
 class status(admin.ModelAdmin):
     list_display = ['status']
+
+
+
+@admin.register(Unit_choices)
+class status(admin.ModelAdmin):
+    list_display = ['unit']
+
+@admin.register(IngredientCategory)
+class status(admin.ModelAdmin):
+    list_display = ['category']
