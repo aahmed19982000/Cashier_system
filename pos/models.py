@@ -12,7 +12,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-
 class Order(models.Model):
     PAYMENT_CHOICES = (
         ('cash', 'Cash'),
@@ -21,18 +20,39 @@ class Order(models.Model):
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_CHOICES)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
+        on_delete=models.CASCADE
+    )
+
+    customer = models.ForeignKey(
+        'Customer',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="العميل"
+    )
+
+    payment_method = models.CharField(
+        max_length=10,
+        choices=PAYMENT_CHOICES
+    )
+
+    total_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
     status = models.ForeignKey(
-    Status_order,
-    on_delete=models.CASCADE,
-    verbose_name="حالة الطلب",
-    null=True,
-    blank=True,
-    default=1 # استبدل 3 بالـ ID الفعلي لحالة "مكتمل"
-)
+        Status_order,
+        on_delete=models.CASCADE,
+        verbose_name="حالة الطلب",
+        null=True,
+        blank=True,
+        default=1
+    )
 
 
     def __str__(self):
@@ -56,10 +76,12 @@ class OrderItem(models.Model):
     
 
 
-class customer (models.Model):
+class Customer(models.Model):
     name= models.CharField(max_length=400, verbose_name="اسم العميل")
     mobil=models.CharField(max_length=15)
     address =models.CharField(max_length=1000, verbose_name="عنوان العميل")
+    number_of_orders = models.PositiveIntegerField(default=0)
+
 
     def __str__(self):
         return self.name

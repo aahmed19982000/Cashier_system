@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Product
+from .models import Product , Customer
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ProductForm
 from django.contrib import messages
@@ -16,11 +16,26 @@ from django.db.models import Sum, Avg, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-
+from django.core.paginator import Paginator
 
 # Create your views here.
 
 
+
+def search_customer(request):
+    phone = request.GET.get('phone')
+    # البحث عن العميل باستخدام رقم الهاتف (حقل mobil في الموديل الخاص بك)
+    customer = Customer.objects.filter(mobil=phone).first()
+    
+    if customer:
+        return JsonResponse({
+            'found': True,
+            'id': customer.id,
+            'name': customer.name,
+            'address': customer.address
+        })
+    else:
+        return JsonResponse({'found': False})
 
 
 @csrf_exempt
@@ -28,16 +43,38 @@ from decimal import Decimal, InvalidOperation
 def cash_checkout(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-
         cart = data.get('cart', [])
         total = data.get('total')
+        order_type = data.get('order_type')
+        cust_data = data.get('customer_data')
 
+        from .models import Customer, Order, OrderItem, Product
+
+        customer_obj = None
+        # منطق الدليفري والتعامل مع موديل Customer
+        if order_type == 'delivery' and cust_data:
+            customer_obj, created = Customer.objects.get_or_create(
+                mobil=cust_data['phone'],
+                defaults={'name': cust_data['name'], 'address': cust_data['address']}
+            )
+            if not created: # تحديث البيانات إذا كان العميل موجوداً مسبقاً
+                customer_obj.name = cust_data['name']
+                customer_obj.address = cust_data['address']
+                customer_obj.save()
+            
+            # تحديث عدد طلبات العميل
+            customer_obj.number_of_orders += 1
+            customer_obj.save()
+
+        # إنشاء الطلب
         order = Order.objects.create(
             user=request.user,
+            customer=customer_obj, # ربط العميل بالطلب
             payment_method='cash',
             total_price=total
         )
 
+        # إضافة الأصناف
         for item in cart:
             product = Product.objects.get(id=item['id'])
             OrderItem.objects.create(
@@ -293,7 +330,57 @@ def sales_reports(request):
 
 
 def customer_management(request):
-    return render(request, 'pos/customer_management.html')
+    # 1. جلب بارامترات البحث والفلترة من الرابط
+    search_query = request.GET.get('search', '')
+    filter_tab = request.GET.get('tab', 'all')
+    page_number = request.GET.get('page', 1)
+
+    # 2. الاستعلام الأساسي عن العملاء
+    customers_list = Customer.objects.all().order_by('-id')
+
+    # 3. تطبيق البحث (بالاسم أو الهاتف)
+    if search_query:
+        customers_list = customers_list.filter(
+            Q(name__icontains=search_query) | 
+            Q(mobil__icontains=search_query)
+        )
+
+    # 4. تطبيق الفلترة (Tabs)
+    if filter_tab == 'frequent': # الأكثر طلباً
+        customers_list = customers_list.order_by('-number_of_orders')
+    elif filter_tab == 'new': # عملاء جدد (آخر 30 يوم)
+        last_month = timezone.now() - timedelta(days=30)
+        # ملاحظة: إذا لم يكن لديك حقل تاريخ إضافة العميل، سنفترض ترتيب ID
+        customers_list = customers_list.order_by('-id')[:50] 
+
+    # 5. حساب الإحصائيات (Stats)
+    now = timezone.now()
+    total_customers = Customer.objects.count()
+    
+    # عملاء جدد هذا الشهر (افتراضاً بناءً على عدد الطلبات أو الترقيم)
+    new_customers_this_month = Customer.objects.filter(number_of_orders__lte=1).count()
+    
+    # العملاء النشطين (الذين لديهم أكثر من 5 طلبات مثلاً)
+    active_customers = Customer.objects.filter(number_of_orders__gt=5).count()
+    
+    # متوسط الطلبات (كبديل لنقاط الولاء إذا لم تكن موجودة)
+    avg_orders = Customer.objects.aggregate(Avg('number_of_orders'))['number_of_orders__avg'] or 0
+
+    # 6. التقسيم لصفحات (Pagination) - 10 عملاء لكل صفحة
+    paginator = Paginator(customers_list, 10)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'customers': page_obj,
+        'total_customers': total_customers,
+        'new_customers_count': new_customers_this_month,
+        'active_customers': active_customers,
+        'avg_orders': round(avg_orders, 1),
+        'search_query': search_query,
+        'current_tab': filter_tab,
+    }
+
+    return render(request, 'pos/customer_management.html', context)
 
 
 def employees_management(request):

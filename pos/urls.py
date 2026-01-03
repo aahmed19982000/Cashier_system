@@ -18,5 +18,6 @@ urlpatterns = [
     
     # الرابط الجديد المفقود لتحديث الكميات (إضافة/خصم)
     path('inventory/update/', views.update_inventory_quantity, name='update_inventory'),
+    path('pos/search-customer/', views.search_customer, name='search_customer'),
 
 ]
