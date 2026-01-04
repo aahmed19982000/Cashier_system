@@ -159,3 +159,21 @@
 .check-btn.visa { background: var(--dark-grey); }
 
 .empty-cart-msg { text-align: center; color: #bdc3c7; padding-top: 50px; font-size: 1.1rem; }
+
+@media print {
+    /* إخفاء كل شيء في الصفحة ما عدا منطقة الفاتورة */
+    body * { visibility: hidden; }
+    #receipt-print-area, #receipt-print-area * { visibility: visible; }
+    
+    #receipt-print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        display: block !important;
+    }
+    
+    /* إلغاء الهوامش الافتراضية للمتصفح */
+    @page { margin: 0; }
+    body { margin: 0.5cm; }
+}

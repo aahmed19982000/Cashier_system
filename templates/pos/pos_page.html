@@ -148,8 +148,7 @@
             </div>
 
             <div class="checkout-grid">
-                <button class="check-btn visa">💳 فيزا</button>
-                <button class="check-btn cash" id="cashCheckout">💵 دفع نقداً</button>
+                <button class="check-btn cash" id="cashCheckout">تنفيذ الطلب </button>
             </div>
         </div>
     </aside>
@@ -292,16 +291,52 @@ function finalizeOrder() {
     .then(res => res.json())
     .then(data => {
         if(data.status === 'success') {
-            orderDisplay.innerText = "#ORD-" + data.order_id;
-            alert('تم تسجيل الطلب بنجاح! رقم الطلب: ' + data.order_id);
-            cart = [];
-            renderCart();
-            closeModals();
-            // لطباعة الفاتورة تلقائياً: window.print();
+            // --- بدء عملية التحضير للطباعة ---
+            document.getElementById('print-order-id').innerText = data.order_id;
+            document.getElementById('print-date').innerText = new Date().toLocaleString('ar-EG');
+            document.getElementById('print-order-type').innerText = (currentOrderType === 'delivery') ? "طلب دليفري" : "طلب صالة";
+            document.getElementById('print-total').innerText = total.toFixed(2);
+
+            // بيانات العميل
+            const custInfoDiv = document.getElementById('print-customer-info');
+            if (currentOrderType === 'delivery' && customerData) {
+                custInfoDiv.style.display = 'block';
+                document.getElementById('print-cust-name').innerText = customerData.name;
+                document.getElementById('print-cust-phone').innerText = customerData.phone;
+                document.getElementById('print-cust-address').innerText = customerData.address;
+            } else {
+                custInfoDiv.style.display = 'none';
+            }
+
+            // تعبئة الأصناف
+            const itemsBody = document.getElementById('print-items-body');
+            itemsBody.innerHTML = '';
+            cart.forEach(item => {
+                itemsBody.innerHTML += `
+                    <tr>
+                        <td style="padding: 5px 0;">${item.name}</td>
+                        <td style="text-align: center;">${item.qty}</td>
+                        <td style="text-align: left;">${(item.price * item.qty).toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            // تنفيذ الطباعة
+            setTimeout(() => {
+                window.print();
+                // تنظيف السلة وإعادة التعيين بعد الطباعة
+                alert('تم تسجيل الطلب بنجاح! رقم: ' + data.order_id);
+                cart = [];
+                renderCart();
+                closeModals();
+                orderDisplay.innerText = "#ORD-جديد";
+            }, 500);
+
         } else {
             alert('خطأ: ' + data.message);
         }
-    });
+    })
+    .catch(err => alert('خطأ في الاتصال بالسيرفر'));
 }
 
 function closeModals() { document.querySelectorAll('.custom-modal').forEach(m => m.style.display='none'); }
@@ -325,4 +360,48 @@ document.querySelectorAll('.cat-pill').forEach(pill => {
     };
 });
 </script>
+
+<div id="receipt-print-area" style="display: none;">
+    <div class="receipt-container" style="width: 80mm; font-family: 'Cairo', sans-serif; direction: rtl; padding: 5px;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2 style="margin: 0;">فطاطري عباد الرحمن</h2>
+            <p style="font-size: 12px; margin: 5px 0;">فرع طهطا - رقم الهاتف</p>
+            <hr>
+            <h4 id="print-order-type" style="margin: 5px 0; background: #eee; padding: 2px;"></h4>
+        </div>
+
+        <div style="font-size: 13px; margin-bottom: 10px;">
+            <div>رقم الطلب: <span id="print-order-id"></span></div>
+            <div>التاريخ: <span id="print-date"></span></div>
+            <div id="print-customer-info" style="display: none;">
+                <hr>
+                <div>العميل: <span id="print-cust-name"></span></div>
+                <div>الهاتف: <span id="print-cust-phone"></span></div>
+                <div>العنوان: <span id="print-cust-address"></span></div>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead style="border-bottom: 1px dashed #000;">
+                <tr>
+                    <th style="text-align: right;">الصنف</th>
+                    <th>الكمية</th>
+                    <th style="text-align: left;">الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody id="print-items-body">
+                </tbody>
+        </table>
+
+        <hr style="border-top: 1px dashed #000;">
+        <div style="text-align: left; font-weight: bold; font-size: 15px;">
+            الإجمالي النهائي: <span id="print-total"></span> ج.م
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 11px;">
+            <p>شكراً لزيارتكم!</p>
+            <p>برمجة وتطوير احمد ابراهيم </p>
+        </div>
+    </div>
+</div>
 {% endblock %}
